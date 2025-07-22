@@ -3,7 +3,6 @@ pipeline{
     stages {
         stage ('deploy') {
 
-            }
             steps {
                 sh 'echo deploy stage to main'
             }
