@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    environnement {
+    environment {
         nom = 'datascientest'
         DOCKER_ID = 'mooncak'
         DOCKER_IMAGE = 'datascientestapi'
@@ -30,10 +30,13 @@ pipeline {
                 }
             }
         }
+
         stage ('User acceptance') {
-            input {
-                message "Déployer le code sur la branche main"
-                ok "Yes"
+            steps {
+                input {
+                    message "Déployer le code sur la branche main"
+                    ok "Yes"
+                }
             }
         }
 
