@@ -9,7 +9,8 @@ pipeline {
     stages {
         stage ('Building') {
             steps {
-                sh 'pip install -r requirements.txt'
+                //sh 'pip install -r requirements.txt' ne fonctionne pas dans le container
+                input message: "Déployer le code sur la branche main", ok: "Yes"
             }
         }
 
