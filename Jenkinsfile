@@ -33,7 +33,7 @@ pipeline {
 
         stage ('User acceptance') {
             steps {
-                input {
+                input{
                     message "Déployer le code sur la branche main"
                     ok "Yes"
                 }
