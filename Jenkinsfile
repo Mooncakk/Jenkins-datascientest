@@ -34,7 +34,6 @@ pipeline {
         stage ('User acceptance') {
             steps {
                 input message: "Déployer le code sur la branche main", ok: "Yes"
-                }
             }
         }
 
@@ -53,7 +52,7 @@ pipeline {
                 }
                 stage ('Merging') {
                     steps {
-                    sh 'echo Merging done'
+                        sh 'echo Merging done'
                     }
                 }
             }
