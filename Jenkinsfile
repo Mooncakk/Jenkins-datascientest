@@ -14,7 +14,7 @@ pipeline{
 
         stage ('deploy') {
             when {
-                branch 'refs/heads/stage'
+                branch 'origin/stage'
             }
             steps {
                 sh 'echo deploy stage to main'
