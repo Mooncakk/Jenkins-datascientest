@@ -6,5 +6,11 @@ pipeline{
                 sh 'echo deploy stage to main'
             }
         }
+
+        stage ('pull request') {
+            sh '''
+            git pull request
+            '''
+        }
     }
 }
