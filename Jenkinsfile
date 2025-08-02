@@ -4,8 +4,7 @@ pipeline {
         stage ('test') {
             steps {
                 echo 'Test executed'
-                when {
-                    branch 'staging'
+
                 }
             }
         }
