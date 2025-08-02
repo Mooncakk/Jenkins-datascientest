@@ -4,6 +4,7 @@ pipeline {
         stage ('build') {
             steps {
                 echo 'pip install -r !!!'
+            }
         }
         stage ('test') {
             steps {
