@@ -4,13 +4,10 @@ pipeline {
         stage ('build') {
             steps {
                 echo 'pip install -r !!!'
-                }
-            }
+        }
         stage ('test') {
             steps {
                 echo 'Test executed !!!'
-
-                }
             }
         }
     }
