@@ -4,7 +4,6 @@ pipeline {
         stage ('testdocker') {
             steps {
                 script {
-
                     def hello = docker.image('alpine:latest')
                     hello.pull()
                     hello.withRun { c ->
