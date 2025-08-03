@@ -4,7 +4,10 @@ pipeline {
         stage ('testdocker') {
             steps {
                 script {
-                    docker.image('hello-world:latest').withRun { c ->
+
+                    def hello = docker.image('hello-world:latest')
+                    hello.pull()
+                    hello.withRun { c ->
                     sh 'echo je suis à l intérieure!!!'}
                 }
             }
