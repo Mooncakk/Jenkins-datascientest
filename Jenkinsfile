@@ -3,7 +3,9 @@ pipeline {
     stages {
         stage ('testdocker') {
             steps {
-                docker.image('hello-world:latest')
+                script {
+                    docker.image('hello-world:latest')
+                }
             }
         }
         stage ('build') {
