@@ -8,9 +8,9 @@ pipeline{
     stages {
         stage ('build') {
             steps {
-                echo '''
-                python -m venv env
-                pip install -r requirements.txt
+                sh '''
+                echo "python -m venv env"
+                echo "pip install -r requirements.txt"
                 '''
             }
         }
