@@ -8,10 +8,10 @@ pipeline{
     stages {
         stage ('build') {
             steps {
-                sh '
+                echo '''
                 python -m venv env
                 pip install -r requirements.txt
-                '
+                '''
             }
         }
 
