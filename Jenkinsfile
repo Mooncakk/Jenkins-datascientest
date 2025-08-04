@@ -24,7 +24,7 @@ pipeline{
                     curl -X POST \
                     -H "Authorization: token ${github_token}"
                     -H "Accept: application/vnd.github.v3+json"
-                    "${link}"
+                    echo "${link}"
                     -d '{
                     "base": "main",
                     "head": "staging",
