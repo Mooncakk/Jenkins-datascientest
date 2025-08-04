@@ -2,15 +2,15 @@ pipeline{
     agent any
 
     environment {
-                github_token  = credential('github_tok')
+                github_token  = credentials('github_tok')
     }
 
     stages {
         stage ('build') {
             steps {
-                sh '''
-                echo "python -m venv env"
-                echo "pip install -r requirements.txt"
+                echo '''
+                python -m venv env
+                pip install -r requirements.txt
                 '''
             }
         }
