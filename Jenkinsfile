@@ -20,7 +20,7 @@ pipeline{
             sh '''
             echo "deploy staging to main"
             curl -X POST \
-            -H "Authorization: token ${github_tokenq}"
+            -H "Authorization: token ${github_token}"
             -H "Accept: application/vnd.github.v3+json"
             https://api.github.com/repos/mooncakk/Jenkins-datascientest/merges
             -d '{
