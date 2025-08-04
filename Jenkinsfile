@@ -1,28 +1,33 @@
-pipeline {
-    agent { docker { image 'maven:3.8.7-eclipse-temurin-11' } }
+pipeline{
+    agent any
+
+    environment {
+                github_token  = credential('github_tok')
+    }
+
     stages {
-        stage('testbuild') {
-            steps {
-                sh 'mvn --version'
-            }
-        }
-        stage ('testdocker') {
-            steps {
-                script {
-                    def hello = docker.image('alpine:latest')
-                    hello.withRun { c ->
-                    sh 'echo je suis à l intérieure!!!'}
-                }
-            }
-        }
         stage ('build') {
             steps {
-                echo 'pip install -r !!!'
+                echo '
+                python -m venv env
+                pip install -r requirements.txt
+                '
             }
         }
-        stage ('test') {
+
+        stage ('merging') {
             steps {
-                echo 'Test executed !!!'
+            sh '''
+            echo "deploy staging to main"
+            curl -X POST \
+            -H "Authorization: token ${github_tokenq}"
+            -H "Accept: application/vnd.github.v3+json"
+            https://api.github.com/repos/mooncakk/Jenkins-datascientest/merges
+            -d '{
+            "base": "main",
+            "head": "staging",
+            "commit_message": "Direct merge of staging into main"
+            '''
             }
         }
     }
