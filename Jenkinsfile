@@ -17,12 +17,13 @@ pipeline{
 
         stage ('merging') {
             steps {
+            def link = "https://api.github.com/repos/mooncakk/Jenkins-datascientest/merges"
             sh '''
             echo "deploy staging to main"
             curl -X POST \
             -H "Authorization: token ${github_token}"
             -H "Accept: application/vnd.github.v3+json"
-            https://api.github.com/repos/mooncakk/Jenkins-datascientest/merges
+            ${link}
             -d '{
             "base": "main",
             "head": "staging",
