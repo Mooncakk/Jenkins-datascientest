@@ -101,9 +101,8 @@ pipeline{
             }
         }
         failure {
-                script {
-                    echo "Pipeline failed auto-merge setup"
-                }
+            script {
+                echo "Pipeline failed auto-merge setup"
             }
         }
     }
