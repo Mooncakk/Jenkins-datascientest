@@ -22,7 +22,7 @@ pipeline{
             defaultValue: 'squash',
             description: 'Auto-merge method to use'
         )
-        int( // A check datatype
+        string( // A check datatype
             name: 'PR_NUMBER',
             defaultValue: '16',
             description: 'pull request number'
