@@ -9,12 +9,12 @@ pipeline{
     parameters {
         string(
             name: 'BRANCH_NAME',
-            defaultValue: 'staging',
+            defaultValue: 'STAGING',
             description: 'Source branch for the pull request'
         )
         string(
             name: 'BASE_BRANCH',
-            defaultValue: 'main',
+            defaultValue: 'MAIN',
             description: 'Target branch for the pull request'
         )
         string(
@@ -43,7 +43,7 @@ pipeline{
                         httpMode: 'POST',
                         url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls",
                         customHeaders: [
-                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
                             [name: 'Accept', value: 'application/vnd.github.v3+json']
                         ],
                         contentType: 'APPLICATION_JSON',
@@ -78,7 +78,7 @@ pipeline{
                         httpMode: 'POST',
                         url: 'https://api.github.com/graphql',
                         customHeaders: [
-                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         validResponseCodes: '200:299',
@@ -104,16 +104,16 @@ pipeline{
                             httpMode: 'POST',
                             url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${env.PR_NUMBER}/comments",
                             customHeaders: [
-                                [name: 'Authorization', value: "token ${GITHUB_TOKEN}"]
+                                [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"]
                             ],
                             contentType: 'APPLICATION_JSON',
                             requestBody: """{
-                                "body": "**Auto-Merge Enabled!**\\n\\n**Method:** ${params.MERGE_METHOD}\\n⏰ **Enabled:** ${env.AUTO_MERGE_ENABLED_AT}\\n🔧 **By:** ${env.AUTO_MERGE_ENABLED_BY}\\n\\n**Status:** This PR will automatically merge when all required checks pass.\\n\\n---\\n*Managed by Jenkins Build #${BUILD_NUMBER}*"
+                                "body": "**Auto-Merge Enabled!**\\n\\n**Method:** ${params.MERGE_METHOD}\\n **Enabled:** ${env.AUTO_MERGE_ENABLED_AT}\\n🔧 **By:** ${env.AUTO_MERGE_ENABLED_BY}\\n\\n**Status:** This PR will automatically merge when all required checks pass.\\n\\n---\\n*Managed by Jenkins Build #${BUILD_NUMBER}*"
                             }"""
                         )
 
                     } else {
-                        echo "❌ Failed to enable auto-merge"
+                        echo "Failed to enable auto-merge"
                         echo "Response: ${autoMergeResponse.content}"
                         error("Auto-merge setup failed")
                     }
@@ -139,7 +139,7 @@ pipeline{
         }
         failure {
             script {
-                echo "❌ Pipeline failed during PR creation or auto-merge setup"
+                echo "Pipeline failed during PR creation or auto-merge setup"
 
                 if (env.PR_NUMBER) {
                     echo "PR was created but auto-merge setup failed"
