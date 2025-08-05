@@ -17,7 +17,7 @@ pipeline{
             defaultValue: 'main',
             description: 'Target branch for the pull request'
         )
-        choice(
+        string(
             name: 'MERGE_METHOD',
             defaultValue: 'squash',
             description: 'Auto-merge method to use'
