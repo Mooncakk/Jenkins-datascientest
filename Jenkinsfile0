@@ -19,7 +19,7 @@ pipeline{
         )
         string(
             name: 'MERGE_METHOD',
-            defaultValue: 'squash',
+            defaultValue: 'SQUASH',
             description: 'Auto-merge method to use'
         )
         string( // A check datatype
