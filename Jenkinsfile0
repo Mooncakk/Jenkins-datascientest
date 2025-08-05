@@ -1,0 +1,21 @@
+pipeline {
+	agent any
+    environments {
+    	toto_key = credentials('toto_secret')
+    }
+    stages {
+    	stage ('test secret') {
+        	steps {
+            	sh 'echo token $toto_key'
+            	sh 'query {
+                        repository(owner: "OWNER", name: "REPO_NAME") {
+                            pullRequest(number: PULL_REQUEST_NUMBER) {
+                                id
+                            }
+                        }
+                }'
+
+            }
+        }
+    }
+}

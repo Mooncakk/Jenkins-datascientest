@@ -83,9 +83,17 @@ pipeline{
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         validResponseCodes: '200:299',
-                        requestBody: """{
-                            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \\"${env.PR_NODE_ID}\\", mergeMethod: ${params.MERGE_METHOD} }) { pullRequest { autoMergeRequest { enabledAt enabledBy { login } } } } }"
-                        }"""
+                        requestBody: """
+                            mutation {
+                              enablePullRequestAutoMerge(input: {pullRequestId: "${PULL_REQUEST_ID"}) {
+                                pullRequest {
+                                  id
+                                  autoMergeRequest {
+                                    enabledAt
+                                  }
+                                }
+                              }
+                            }"""
                     )
 
                     // Parse auto-merge response
