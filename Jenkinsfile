@@ -37,13 +37,13 @@ pipeline{
             steps {
                 script {
                     echo "Creating pull request from ${params.BRANCH_NAME} to ${params.BASE_BRANCH}"
-                    echo 'Bearer $GITHUB_TOKEN'
+                    echo "Bearer $GITHUB_TOKEN"
                     // Step 1: Create PR using GitHub REST API
                     def prResponse = httpRequest(
                         httpMode: 'POST',
                         url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls",
                         customHeaders: [
-                            [name: 'Authorization', value: "Bearer $GITHUB_TOKEN"],
+                            [name: 'Authorization', value: 'Bearer $GITHUB_TOKEN'],
                             [name: 'Accept', value: 'application/vnd.github.v3+json'],
                             [name: 'X-GitHub-Api-Version', value: '2022-11-28']
                         ],
