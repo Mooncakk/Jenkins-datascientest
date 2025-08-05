@@ -41,9 +41,9 @@ pipeline{
                     // Step 1: Create PR using GitHub REST API
                     def prResponse = httpRequest(
                         httpMode: 'POST',
-                        url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls",
+                        url: 'https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls',
                         customHeaders: [
-                            [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
+                            [name: 'Authorization', value: 'Bearer $GITHUB_TOKEN'],
                             [name: 'Accept', value: 'application/vnd.github.v3+json'],
                             [name: 'X-GitHub-Api-Version', value: '2022-11-28']
                         ],
@@ -52,8 +52,8 @@ pipeline{
                         requestBody: """{
                             "title": "Auto merge to main",
                             "body": "## Auto-Merge:\\nThis PR will automatically merge when all checks pass.\\n\\n---\\n*Created by Jenkins Build #${BUILD_NUMBER}*",
-                            "head": "${params.BRANCH_NAME}",
-                            "base": "${params.BASE_BRANCH}"
+                            "head": '${params.BRANCH_NAME}',
+                            "base": '${params.BASE_BRANCH}'
                         }"""
                     )
                     // Extract PR details from response
