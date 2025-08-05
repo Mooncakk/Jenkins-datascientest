@@ -9,12 +9,12 @@ pipeline{
     parameters {
         string(
             name: 'BRANCH_NAME',
-            defaultValue: 'STAGING',
+            defaultValue: 'staging',
             description: 'Source branch for the pull request'
         )
         string(
             name: 'BASE_BRANCH',
-            defaultValue: 'MAIN',
+            defaultValue: 'main',
             description: 'Target branch for the pull request'
         )
         string(
@@ -79,7 +79,7 @@ pipeline{
                         httpMode: 'POST',
                         url: 'https://api.github.com/graphql',
                         customHeaders: [
-                            [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
+                            [name: 'Authorization', value: "Bearer $GITHUB_TOKEN"],
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         validResponseCodes: '200:299',
@@ -105,7 +105,7 @@ pipeline{
                             httpMode: 'POST',
                             url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${env.PR_NUMBER}/comments",
                             customHeaders: [
-                                [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"]
+                                [name: 'Authorization', value: "Bearer $GITHUB_TOKEN"]
                             ],
                             contentType: 'APPLICATION_JSON',
                             requestBody: """{
