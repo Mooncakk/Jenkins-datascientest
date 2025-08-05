@@ -147,7 +147,6 @@ pipeline{
                     echo "PR URL: ${env.PR_URL}"
                 } else {
                     echo "PR creation failed - check GitHub API access and branch existence"
-                    echo "${prData}"
                 }
             }
         }
