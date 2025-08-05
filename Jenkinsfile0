@@ -24,7 +24,7 @@ pipeline{
         )
         string( // A check datatype
             name: 'PR_NUMBER',
-            defaultValue: '16',
+            defaultValue: '17',
             description: 'pull request number'
         )
     }
