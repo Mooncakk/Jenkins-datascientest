@@ -44,7 +44,8 @@ pipeline{
                         url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls",
                         customHeaders: [
                             [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
-                            [name: 'Accept', value: 'application/vnd.github.v3+json']
+                            [name: 'Accept', value: 'application/vnd.github.v3+json'],
+                            [name: 'X-GitHub-Api-Version', value: '2022-11-28']
                         ],
                         contentType: 'APPLICATION_JSON',
                         validResponseCodes: '200:299',
