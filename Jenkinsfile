@@ -44,8 +44,7 @@ pipeline{
                         url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls",
                         customHeaders: [
                             [name: 'Authorization', value: "Bearer ${GITHUB_TOKEN}"],
-                            [name: 'Accept', value: 'application/vnd.github.v3+json'],
-                            [name: 'X-GitHub-Api-Version', value: '2022-11-28']
+                            [name: 'Accept', value: 'application/vnd.github.v3+json']
                         ],
                         contentType: 'APPLICATION_JSON',
                         validResponseCodes: '200:299',
@@ -148,7 +147,6 @@ pipeline{
                     echo "PR URL: ${env.PR_URL}"
                 } else {
                     echo "PR creation failed - check GitHub API access and branch existence"
-                    echo "${prData}"
                 }
             }
         }
