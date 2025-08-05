@@ -37,7 +37,7 @@ pipeline{
             steps {
                 script {
                     echo "Creating pull request from ${params.BRANCH_NAME} to ${params.BASE_BRANCH}"
-                    echo 'Bearer $GITHUB_TOKEN'
+                    echo "Bearer $GITHUB_TOKEN"
                     // Step 1: Create PR using GitHub REST API
                     def prResponse = httpRequest(
                         httpMode: 'POST',
