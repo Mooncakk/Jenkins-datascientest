@@ -1,0 +1,115 @@
+pipeline{
+    agent any
+
+    environment {
+                GITHUB_TOKEN  = credentials('github_tok')
+                REPO_OWNER = 'mooncakk'
+                REPO_NAME = 'jenkins-datascientest'
+    }
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'staging',
+            description: 'Source branch for the pull request'
+        )
+        string(
+            name: 'BASE_BRANCH',
+            defaultValue: 'main',
+            description: 'Target branch for the pull request'
+        )
+        choice( //Modifier
+            name: 'MERGE_METHOD',
+            choices: ['SQUASH', 'MERGE', 'REBASE'],
+            description: 'Auto-merge method'
+        )
+        string(
+            name: 'PR_NUMBER',
+            defaultValue: '17',
+            description: 'pull request number'
+        )
+        string(
+            name: 'env.PR_NODE_ID',
+            defaultValue: 'PR_kwDOPOTiSM6iSH8d',
+            description: 'pull request ID'
+        )
+    }
+
+    stages {
+
+        // 🧪 DEBUGGING VERSION - Use this to troubleshoot
+        stage('Debug Auto-Merge (Troubleshooting)') {
+            steps {
+                script {
+                    echo "🐛 DEBUG MODE: Investigating auto-merge issues..."
+
+                    // 1. Check GitHub token permissions
+                    echo "1️⃣ Checking GitHub token permissions..."
+                    def userResponse = httpRequest(
+                        httpMode: 'GET',
+                        url: 'https://api.github.com/user',
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"]
+                        ]
+                    )
+                    def userData = readJSON text: userResponse.content
+                    echo "👤 Authenticated as: ${userData.login}"
+
+                    // 2. Check repository permissions
+                    echo "2️⃣ Checking repository access..."
+                    def repoResponse = httpRequest(
+                        httpMode: 'GET',
+                        url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}",
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"]
+                        ],
+                        validResponseCodes: '200:499'
+                    )
+
+                    if (repoResponse.status == 200) {
+                        def repoData = readJSON text: repoResponse.content
+                        echo "✅ Repository access: ${repoData.full_name}"
+                        echo "🔒 Permissions: admin=${repoData.permissions?.admin}, push=${repoData.permissions?.push}"
+                    } else {
+                        echo "❌ Repository access denied (${repoResponse.status})"
+                    }
+
+                    // 3. Check PR details with GraphQL
+                    echo "3️⃣ Checking PR with GraphQL..."
+                    def prQueryResponse = httpRequest(
+                        httpMode: 'POST',
+                        url: 'https://api.github.com/graphql',
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Content-Type', value: 'application/json']
+                        ],
+                        requestBody: """{
+                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeableState autoMergeRequest { enabledAt } } } }"
+                        }"""
+                    )
+
+                    def prQueryResult = readJSON text: prQueryResponse.content
+                    echo "📄 GraphQL PR Query Result:"
+                    echo "${prQueryResponse.content}"
+
+                    // 4. Test auto-merge mutation with detailed response
+                    echo "4️⃣ Testing auto-merge mutation..."
+                    def testResponse = httpRequest(
+                        httpMode: 'POST',
+                        url: 'https://api.github.com/graphql',
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Content-Type', value: 'application/json']
+                        ],
+                        validResponseCodes: '200:299',
+                        requestBody: """{
+                            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \\"${env.PR_NODE_ID}\\", mergeMethod: ${params.MERGE_METHOD} }) { clientMutationId pullRequest { id title autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
+                        }"""
+                    )
+
+                    echo "🔬 Full Auto-Merge Response:"
+                    echo "${testResponse.content}"
+                }
+            }
+        }
+    }
+}
