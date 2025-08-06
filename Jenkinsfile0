@@ -17,15 +17,20 @@ pipeline{
             defaultValue: 'main',
             description: 'Target branch for the pull request'
         )
-        choice(
+        choice( //Modifier
             name: 'MERGE_METHOD',
             choices: ['SQUASH', 'MERGE', 'REBASE'],
             description: 'Auto-merge method'
         )
-        string( // A check datatype
+        string(
             name: 'PR_NUMBER',
             defaultValue: '17',
             description: 'pull request number'
+        )
+        string(
+            name: 'env.PR_NODE_ID',
+            defaultValue: 'PR_kwDOPOTiSM6iSH8d',
+            description: 'pull request ID'
         )
     }
 
