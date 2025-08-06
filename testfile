@@ -47,7 +47,7 @@ pipeline{
                         httpMode: 'POST',
                         url: 'https://api.github.com/graphql',
                         customHeaders: [
-                            [name: 'Authorization', value: 'token $GITHUB_TOKEN'],
+                            [name: 'Authorization', value: 'Bearer $GITHUB_TOKEN'],
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         validResponseCodes: '200:299',
