@@ -19,7 +19,7 @@ pipeline{
         )
         string(
             name: 'MERGE_METHOD',
-            defaultValue: 'squash',
+            defaultValue: 'SQUASH',
             description: 'Auto-merge method to use'
         )
     }
@@ -66,6 +66,7 @@ pipeline{
                     echo "PR Number: #${env.PR_NUMBER}"
                     //echo "🔗 PR URL: ${env.PR_URL}" A SUPPRIMER
                     //echo "🆔 Node ID: ${env.PR_NODE_ID}"
+                    echo "${prData}"
                 }
             }
         }
@@ -148,7 +149,6 @@ pipeline{
                     echo "PR URL: ${env.PR_URL}"
                 } else {
                     echo "PR creation failed - check GitHub API access and branch existence"
-                    echo "${prData}"
                 }
             }
         }

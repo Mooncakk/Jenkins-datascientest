@@ -1,0 +1,126 @@
+pipeline{
+    agent any
+
+    environment {
+                GITHUB_TOKEN  = credentials('github_tok')
+                REPO_OWNER = 'mooncakk'
+                REPO_NAME = 'jenkins-datascientest'
+    }
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'staging',
+            description: 'Source branch for the pull request'
+        )
+        string(
+            name: 'BASE_BRANCH',
+            defaultValue: 'main',
+            description: 'Target branch for the pull request'
+        )
+        choice( //Modifier
+            name: 'MERGE_METHOD',
+            choices: ['SQUASH', 'MERGE', 'REBASE'],
+            description: 'Auto-merge method'
+        )
+        string(
+            name: 'PR_NUMBER',
+            defaultValue: '17',
+            description: 'pull request number'
+        )
+        string(
+            name: 'env.PR_NODE_ID',
+            defaultValue: 'PR_kwDOPOTiSM6iSH8d',
+            description: 'pull request ID'
+        )
+    }
+
+    stages {
+
+        stage('Enable Auto-Merge (Fixed)') {
+            steps {
+                script {
+                    echo "🔄 Enabling auto-merge with method: ${params.MERGE_METHOD}..."
+
+                    // 🔌 REQUIRES: HTTP Request Plugin
+                    def autoMergeResponse = httpRequest(
+                        httpMode: 'POST',
+                        url: 'https://api.github.com/graphql',
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Content-Type', value: 'application/json']
+                        ],
+                        validResponseCodes: '200:299',
+                        requestBody: """{
+                            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \\"${env.PR_NODE_ID}\\", mergeMethod: ${params.MERGE_METHOD} }) { clientMutationId pullRequest { id number title autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
+                        }"""
+                    )
+
+                    // 🔌 REQUIRES: Pipeline Utility Steps Plugin
+                    def result = readJSON text: autoMergeResponse.content
+
+                    // Debug: Show the full response
+                    echo "🔍 Auto-Merge Response: ${autoMergeResponse.content}"
+
+                    // Check for GraphQL errors
+                    if (result.errors) {
+                        echo "❌ GraphQL Errors:"
+                        result.errors.each { error ->
+                            echo "  - Message: ${error.message}"
+                            echo "  - Path: ${error.path}"
+                            if (error.extensions) {
+                                echo "  - Code: ${error.extensions.code}"
+                                echo "  - Type: ${error.extensions.typeName}"
+                                echo "  - Field: ${error.extensions.fieldName}"
+                            }
+                        }
+                        error("GraphQL mutation failed")
+                    }
+
+                    // Check for successful auto-merge
+                    if (result.data?.enablePullRequestAutoMerge?.pullRequest) {
+                        def pr = result.data.enablePullRequestAutoMerge.pullRequest
+                        echo "✅ Auto-merge operation completed!"
+                        echo "📋 PR: #${pr.number} - ${pr.title}"
+
+                        if (pr.autoMergeRequest) {
+                            echo "✅ Auto-merge enabled successfully!"
+                            echo "⏰ Enabled at: ${pr.autoMergeRequest.enabledAt}"
+                            echo "👤 Enabled by: ${pr.autoMergeRequest.enabledBy.login}"
+                            echo "🔧 Method: ${pr.autoMergeRequest.mergeMethod}"
+                            env.AUTO_MERGE_ENABLED = 'true'
+                        } else {
+                            echo "⚠️ Auto-merge not enabled - checking repository settings..."
+                            checkRepositoryAutoMergeSettings()
+                        }
+                    } else {
+                        echo "❌ Failed to enable auto-merge"
+                        echo "Mutation returned no PR data"
+                        error("Auto-merge setup failed")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                echo """
+                SUCCESS: MERGE Created!
+
+                Summary:
+                - PR Number: #${PR_NUMBER}
+                //- PR URL: ${env.PR_URL}
+                //- Source Branch: ${params.BRANCH_NAME}
+                //- Target Branch: ${params.BASE_BRANCH}
+                - Auto-Merge: Enabled (${params.MERGE_METHOD})
+                //- Enabled At: ${env.AUTO_MERGE_ENABLED_AT}
+                """
+            }
+        }
+        failure {
+            script {
+                echo "Pipeline failed auto-merge setup"
+            }
+        }
+    }
+}

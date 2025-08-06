@@ -1,0 +1,93 @@
+pipeline{
+    agent any
+
+    environment {
+                GITHUB_TOKEN  = credentials('github_tok')
+                REPO_OWNER = 'mooncakk'
+                REPO_NAME = 'jenkins-datascientest'
+    }
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'staging',
+            description: 'Source branch for the pull request'
+        )
+        string(
+            name: 'BASE_BRANCH',
+            defaultValue: 'main',
+            description: 'Target branch for the pull request'
+        )
+        choice( //Modifier
+            name: 'MERGE_METHOD',
+            choices: ['SQUASH', 'MERGE', 'REBASE'],
+            description: 'Auto-merge method'
+        )
+        string(
+            name: 'PR_NUMBER',
+            defaultValue: '17',
+            description: 'pull request number'
+        )
+        string(
+            name: 'env.PR_NODE_ID',
+            defaultValue: 'PR_kwDOPOTiSM6iSH8d',
+            description: 'pull request ID'
+        )
+    }
+
+    stages {
+
+        stage('Debug Auto-Merge (Fixed Fields)') {
+            steps {
+                script {
+                    echo "🐛 DEBUG: Checking PR with correct GraphQL fields..."
+
+                    // ✅ CORRECT field names for GitHub GraphQL API
+                    // 🔌 REQUIRES: HTTP Request Plugin
+                    def prQueryResponse = httpRequest(
+                        httpMode: 'POST',
+                        url: 'https://api.github.com/graphql',
+                        customHeaders: [
+                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
+                            [name: 'Content-Type', value: 'application/json']
+                        ],
+                        requestBody: """{
+                            "query": "query { node(id: \\"PR_kwDOPOTiSM6iSH8d\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
+                        }"""
+                    )
+
+                    // 🔌 REQUIRES: Pipeline Utility Steps Plugin
+                    def prQueryResult = readJSON text: prQueryResponse.content
+                    echo "📄 GraphQL PR Query Result:"
+                    echo "${prQueryResponse.content}"
+
+                    // Parse the results
+                    if (prQueryResult.errors) {
+                        echo "❌ GraphQL Errors:"
+                        prQueryResult.errors.each { error ->
+                            echo "  - ${error.message}"
+                        }
+                    } else if (prQueryResult.data?.node) {
+                        def pr = prQueryResult.data.node
+                        echo "✅ PR Found:"
+                        echo "  📋 Number: ${pr.number}"
+                        echo "  📝 Title: ${pr.title}"
+                        echo "  📊 State: ${pr.state}"
+                        echo "  🔀 Mergeable: ${pr.mergeable}"
+                        echo "  🚦 Merge State: ${pr.mergeStateStatus}"
+
+                        if (pr.autoMergeRequest) {
+                            echo "  ✅ Auto-merge: Enabled"
+                            echo "  ⏰ Enabled at: ${pr.autoMergeRequest.enabledAt}"
+                            echo "  👤 Enabled by: ${pr.autoMergeRequest.enabledBy.login}"
+                            echo "  🔧 Method: ${pr.autoMergeRequest.mergeMethod}"
+                        } else {
+                            echo "  ❌ Auto-merge: Not enabled"
+                        }
+                    } else {
+                        echo "❌ No PR data found"
+                    }
+                }
+            }
+        }
+    }
+}

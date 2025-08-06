@@ -1,0 +1,126 @@
+pipeline{
+    agent any
+
+    environment {
+                GITHUB_TOKEN  = credentials('github_tok')
+                REPO_OWNER = 'mooncakk'
+                REPO_NAME = 'jenkins-datascientest'
+    }
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'staging',
+            description: 'Source branch for the pull request'
+        )
+        string(
+            name: 'BASE_BRANCH',
+            defaultValue: 'main',
+            description: 'Target branch for the pull request'
+        )
+        choice( //Modifier
+            name: 'MERGE_METHOD',
+            choices: ['SQUASH', 'MERGE', 'REBASE'],
+            description: 'Auto-merge method'
+        )
+        string(
+            name: 'PR_NUMBER',
+            defaultValue: '17',
+            description: 'pull request number'
+        )
+        string(
+            name: 'env.PR_NODE_ID',
+            defaultValue: 'PR_kwDOPOTiSM6iSH8d',
+            description: 'pull request ID'
+        )
+    }
+
+    stages {
+
+        // 🔧 FIXED VERSION with proper null checking
+        stage('Enable Auto-Merge') {
+            steps {
+                script {
+                    echo "🔄 Enabling auto-merge with method: ${params.MERGE_METHOD}..."
+
+                    // 🔌 REQUIRES: HTTP Request Plugin
+                    def autoMergeResponse = httpRequest(
+                        httpMode: 'POST',
+                        url: 'https://api.github.com/graphql',
+                        customHeaders: [
+                            [name: 'Authorization', value: "Bearer $GITHUB_TOKEN"],
+                            [name: 'Content-Type', value: 'application/json']
+                        ],
+                        validResponseCodes: '200:299',
+                        requestBody: """{
+                            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \\"${env.PR_NODE_ID}\\", mergeMethod: ${params.MERGE_METHOD} }) { pullRequest { autoMergeRequest { enabledAt enabledBy { login } } } } }"
+                        }"""
+                    )
+
+                    // 🔌 REQUIRES: Pipeline Utility Steps Plugin
+                    def result = readJSON text: autoMergeResponse.content
+
+                    // Debug: Show the full response
+                    echo "🔍 GraphQL Response: ${autoMergeResponse.content}"
+
+                    // Check for GraphQL errors first
+                    if (result.errors) {
+                        echo "❌ GraphQL Errors found:"
+                        result.errors.each { error ->
+                            echo "  - ${error.message}"
+                            echo "  - Location: ${error.locations}"
+                        }
+                        error("GraphQL mutation failed with errors")
+                    }
+
+                    // Check if data exists
+                    if (!result.data) {
+                        echo "❌ No data in GraphQL response"
+                        error("GraphQL response missing data field")
+                    }
+
+                    // Check if enablePullRequestAutoMerge exists
+                    if (!result.data.enablePullRequestAutoMerge) {
+                        echo "❌ enablePullRequestAutoMerge is null/missing"
+                        echo "This usually means:"
+                        echo "  1. Invalid PR Node ID: ${env.PR_NODE_ID}"
+                        echo "  2. PR doesn't exist or was closed"
+                        echo "  3. Insufficient permissions"
+                        error("Failed to enable auto-merge - mutation returned null")
+                    }
+
+                    // Check if pullRequest is null
+                    if (!result.data.enablePullRequestAutoMerge.pullRequest) {
+                        echo "❌ pullRequest is null in response"
+                        echo "Possible causes:"
+                        echo "  1. PR Node ID '${env.PR_NODE_ID}' is invalid"
+                        echo "  2. PR was already merged or closed"
+                        echo "  3. GitHub token lacks 'repo' permissions"
+                        echo "  4. Repository doesn't allow auto-merge"
+
+                        // Let's verify the PR still exists
+                        verifyPRExists()
+                        error("Auto-merge failed - pullRequest is null")
+                    }
+
+                    // Safe access to autoMergeRequest
+                    def pullRequest = result.data.enablePullRequestAutoMerge.pullRequest
+                    if (pullRequest.autoMergeRequest) {
+                        def autoMerge = pullRequest.autoMergeRequest
+                        echo "✅ Auto-merge enabled successfully!"
+                        echo "⏰ Enabled at: ${autoMerge.enabledAt}"
+                        echo "👤 Enabled by: ${autoMerge.enabledBy.login}"
+                        env.AUTO_MERGE_ENABLED = 'true'
+                    } else {
+                        echo "⚠️ Auto-merge request is null - checking why..."
+
+                        // Check if auto-merge is already enabled
+                        checkExistingAutoMerge()
+
+                        echo "❌ Failed to enable auto-merge"
+                        error("Auto-merge setup incomplete")
+                    }
+                }
+            }
+        }
+    }
+}
