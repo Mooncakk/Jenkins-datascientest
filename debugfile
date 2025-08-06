@@ -83,9 +83,10 @@ pipeline{
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         requestBody: """{
-                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeableState autoMergeRequest { enabledAt } } } }"
+                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt } } } }"
                         }"""
                     )
+
 
                     def prQueryResult = readJSON text: prQueryResponse.content
                     echo "📄 GraphQL PR Query Result:"
