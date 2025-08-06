@@ -77,7 +77,7 @@ pipeline{
 
                         if (pr.autoMergeRequest) {
                             echo "  ✅ Auto-merge: Enabled"
-                            echo "  ⏰ Enabled at: ${pr.autoMergeRequest.enabledAt}"
+                            echo "  ⏰ Enabled at: ${pr.autoMergeRequest}"
                             echo "  👤 Enabled by: ${pr.autoMergeRequest.enabledBy.login}"
                             echo "  🔧 Method: ${pr.autoMergeRequest.mergeMethod}"
                         } else {
