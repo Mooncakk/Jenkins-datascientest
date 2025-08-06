@@ -17,10 +17,10 @@ pipeline{
             defaultValue: 'main',
             description: 'Target branch for the pull request'
         )
-        string(
+        choice(
             name: 'MERGE_METHOD',
-            defaultValue: 'SQUASH',
-            description: 'Auto-merge method to use'
+            choices: ['SQUASH', 'MERGE', 'REBASE'],
+            description: 'Auto-merge method'
         )
         string( // A check datatype
             name: 'PR_NUMBER',
