@@ -36,45 +36,13 @@ pipeline{
 
     stages {
 
-        // 🧪 DEBUGGING VERSION - Use this to troubleshoot
-        stage('Debug Auto-Merge (Troubleshooting)') {
+        stage('Debug Auto-Merge (Fixed Fields)') {
             steps {
                 script {
-                    echo "🐛 DEBUG MODE: Investigating auto-merge issues..."
+                    echo "🐛 DEBUG: Checking PR with correct GraphQL fields..."
 
-                    // 1. Check GitHub token permissions
-                    echo "1️⃣ Checking GitHub token permissions..."
-                    def userResponse = httpRequest(
-                        httpMode: 'GET',
-                        url: 'https://api.github.com/user',
-                        customHeaders: [
-                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"]
-                        ]
-                    )
-                    def userData = readJSON text: userResponse.content
-                    echo "👤 Authenticated as: ${userData.login}"
-
-                    // 2. Check repository permissions
-                    echo "2️⃣ Checking repository access..."
-                    def repoResponse = httpRequest(
-                        httpMode: 'GET',
-                        url: "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}",
-                        customHeaders: [
-                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"]
-                        ],
-                        validResponseCodes: '200:499'
-                    )
-
-                    if (repoResponse.status == 200) {
-                        def repoData = readJSON text: repoResponse.content
-                        echo "✅ Repository access: ${repoData.full_name}"
-                        echo "🔒 Permissions: admin=${repoData.permissions?.admin}, push=${repoData.permissions?.push}"
-                    } else {
-                        echo "❌ Repository access denied (${repoResponse.status})"
-                    }
-
-                    // 3. Check PR details with GraphQL
-                    echo "3️⃣ Checking PR with GraphQL..."
+                    // ✅ CORRECT field names for GitHub GraphQL API
+                    // 🔌 REQUIRES: HTTP Request Plugin
                     def prQueryResponse = httpRequest(
                         httpMode: 'POST',
                         url: 'https://api.github.com/graphql',
@@ -83,32 +51,41 @@ pipeline{
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         requestBody: """{
-                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt } } } }"
+                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
                         }"""
                     )
 
-
+                    // 🔌 REQUIRES: Pipeline Utility Steps Plugin
                     def prQueryResult = readJSON text: prQueryResponse.content
                     echo "📄 GraphQL PR Query Result:"
                     echo "${prQueryResponse.content}"
 
-                    // 4. Test auto-merge mutation with detailed response
-                    echo "4️⃣ Testing auto-merge mutation..."
-                    def testResponse = httpRequest(
-                        httpMode: 'POST',
-                        url: 'https://api.github.com/graphql',
-                        customHeaders: [
-                            [name: 'Authorization', value: "token ${GITHUB_TOKEN}"],
-                            [name: 'Content-Type', value: 'application/json']
-                        ],
-                        validResponseCodes: '200:299',
-                        requestBody: """{
-                            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \\"${env.PR_NODE_ID}\\", mergeMethod: ${params.MERGE_METHOD} }) { clientMutationId pullRequest { id title autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
-                        }"""
-                    )
+                    // Parse the results
+                    if (prQueryResult.errors) {
+                        echo "❌ GraphQL Errors:"
+                        prQueryResult.errors.each { error ->
+                            echo "  - ${error.message}"
+                        }
+                    } else if (prQueryResult.data?.node) {
+                        def pr = prQueryResult.data.node
+                        echo "✅ PR Found:"
+                        echo "  📋 Number: ${pr.number}"
+                        echo "  📝 Title: ${pr.title}"
+                        echo "  📊 State: ${pr.state}"
+                        echo "  🔀 Mergeable: ${pr.mergeable}"
+                        echo "  🚦 Merge State: ${pr.mergeStateStatus}"
 
-                    echo "🔬 Full Auto-Merge Response:"
-                    echo "${testResponse.content}"
+                        if (pr.autoMergeRequest) {
+                            echo "  ✅ Auto-merge: Enabled"
+                            echo "  ⏰ Enabled at: ${pr.autoMergeRequest.enabledAt}"
+                            echo "  👤 Enabled by: ${pr.autoMergeRequest.enabledBy.login}"
+                            echo "  🔧 Method: ${pr.autoMergeRequest.mergeMethod}"
+                        } else {
+                            echo "  ❌ Auto-merge: Not enabled"
+                        }
+                    } else {
+                        echo "❌ No PR data found"
+                    }
                 }
             }
         }
