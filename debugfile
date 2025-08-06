@@ -51,7 +51,7 @@ pipeline{
                             [name: 'Content-Type', value: 'application/json']
                         ],
                         requestBody: """{
-                            "query": "query { node(id: \\"${env.PR_NODE_ID}\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
+                            "query": "query { node(id: \\"PR_kwDOPOTiSM6iSH8d\\") { id ... on PullRequest { number title state mergeable mergeStateStatus autoMergeRequest { enabledAt enabledBy { login } mergeMethod } } } }"
                         }"""
                     )
 
